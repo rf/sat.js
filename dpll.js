@@ -12,14 +12,6 @@
 //
 // A negative number implies `NOT`.
 
-function copy (array) {
-  return array.map(function (item) {
-    if (Array.isArray(item)) return copy(item);
-    else if (typeof item == 'number') return item + 0;
-    else if (typeof item == 'boolean') return !!item;
-  });
-}
-
 // ### `satisfiable`
 // Takes a clause and a set of values and determines if the clause is
 // satisfiable given the values which are defined.  This will return one of
@@ -53,7 +45,7 @@ function satisfiable (clause, values) {
 // * `test` is a variable which we are attempting to set to `value`.
 
 function dpll (count, clauses, values, test, value) {
-  values = (values && copy(values)) || [];
+  values = values? values.slice() : [];
 
   // Filter out satisfiable clauses.  These do not need to be considered.
   clauses = clauses.filter(function (clause) {
@@ -66,18 +58,14 @@ function dpll (count, clauses, values, test, value) {
     // filter out literals which do not affect the value of the clause.
     return clause.filter(function (item) {
 
-      // If the variable we're considering, `test`, is the literal we're 
-      // examining ...
+      // If the variable we're considering in the clause isn't the variable
+      // we're testing, return `true`, keeping this variable in the clause.
       if (test !== Math.abs(item)) return true;
-      var negate = item < 0? true : false;
 
-      // and if the value is true and we're not negating it, or if the value is
-      // false and we're negating, then we want to keep the literal.
-      if ((value && !negate) || (!value && negate)) return true;
-
-      // Otherwise, we are considering this literal but its value is not
-      // important to us.  Throw it out.
-      return false;
+      // Respect negation of the variable in the clause, then return the value
+      // it is set to. If the variable is set to false, it will be removed from
+      // the clause because it no longer affects the clause.
+      return item < 0? !value : value;
     });
   });
 
