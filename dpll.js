@@ -1,3 +1,8 @@
+// This is an extremely simple implementation of the DPLL algorithm for
+// solving boolean satisfiability problems. It contains no optimizations.
+
+// Utility function for copying an array.
+
 function copy (array) {
   return array.map(function (item) {
     if (Array.isArray(item)) return copy(item);
@@ -6,62 +11,88 @@ function copy (array) {
   });
 }
 
-function dpll (num, clauses, values, variable, value) {
-  // simplify here
-  var that = this;
-  this.num = num;
+// Takes a clause and a set of values and determines if the clause is
+// satisfiable given the values which are defined.  This will return one of
+// `true`, `false`, or `undefined`, if it cannot be determined whether the
+// clause is true or false.
 
-  this.values = (values && copy(values)) || [];
+function satisfiable (clause, values) {
+  for (var i = 0; i < clause.length; i++) {
+    var item = clause[i];
+    var value = values[Math.abs(item)];
 
-  this.clauses = clauses.filter(function (clause) {
-    return !(that.satisfiable(clause));
-  }).map(function (clause) {
+    // If the value is `undefined`, it isn't useful to us.  If it is `false`,
+    // it does not affect the value of the clause.  Continue to the next item.
+    if (!value) continue;
+
+    // If we got here, then we have a value in the clause which is `true`;
+    // this causes the whole clause to evaluate to `true`.
+    return true;
+  }
+
+  // If we got here, we did not encounter a `true` value; so, we don't know
+  // if the clause is `true` or `false`.
+  return undefined;
+}
+
+// The recursive `dpll` function.
+//
+// * `count` is the total number of variables.
+// * `clauses` is an array of clauses in Conjunctive Normal Form (ie, each clause
+//   has variables which are ORed together, then each clause is ANDed together).
+// * `values` is a set of variable assignments. 
+// * `test` is a variable which we are attempting to set to `value`.
+
+function dpll (count, clauses, values, test, value) {
+  values = (values && copy(values)) || [];
+
+  // Filter out satisfiable clauses.  These do not need to be considered.
+  clauses = clauses.filter(function (clause) {
+    return !satisfiable(clause, values);
+  });
+  
+  // Take each clause, and ...
+  clauses = clauses.map(function (clause) {
+
+    // filter out literals which do not affect the value of the clause.
     return clause.filter(function (item) {
-      if (variable != Math.abs(item)) return true;
+
+      // If the variable we're considering, `test`, is the literal we're 
+      // examining ...
+      if (test !== Math.abs(item)) return true;
       var negate = item < 0? true : false;
 
-      // this is an XOR but js doesn't have an XOR operator :(
-      // Basically if we're setting the variable to true and not negating,
-      // or if we're negating and setting it to false, then this var
-      // affects the outcome of the clause and should be left in the clause
-      if ((value && !negate) || !value && negate) return true;
+      // and if the value is true and we're not negating it, or if the value is
+      // false and we're negating, then we want to keep the literal.
+      if ((value && !negate) || (!value && negate)) return true;
 
-      // Otherwise it's removed from the clause
+      // Otherwise, we are considering this literal but its value is not
+      // important to us.  Throw it out.
       return false;
     });
   });
-  this.values[variable] = !!value;
+
+  // If there are no clauses left after the above filtering, return `true`.
+  if (clauses.length === 0) { console.dir(values); return true; }
+
+  // If any of the clauses have no literals left, return `false`.
+  if (clauses.some(function (c) { return c.length === 0; })) return false;
+
+  // Choose a new variable to try pseudorandomly.  This is a common place for
+  // optimizations.  We can make choices based on what's worked in the past.
+  // For simplicity, we choose randomly.
+  var choice = Math.floor(Math.random() * count) + 1;
+
+  // Set the value we're going to test now.
+  values[test] = value;
+
+  return dpll(count, clauses, values, choice, true) ||
+         dpll(count, clauses, values, choice, false);
 }
 
-dpll.prototype.solve = function () {
-  if (this.clauses.length === 0) return true;
-  if (this.clauses.some(function (c) { return c.length === 0; })) return false;
-
-  var test = Math.floor(Math.random() * this.num) + 1;
-
-  return new dpll(this.num, this.clauses, this.values, test, true).solve() ||
-         new dpll(this.num, this.clauses, this.values, test, false).solve();
-};
-
-dpll.prototype.satisfiable = function (clause) {
-  for (var i = 0; i < clause.length; i++) {
-    var item = clause[i];
-    var variable = Math.abs(clause[i]);
-    var value = this.values[variable];
-    if (value === undefined) continue;
-    value = item < 0? !value : value;
-    return !!value;
-  }
-  return undefined;
-};
-
 var input = [
-  [1, -2, 4],
-  [-1, -2, -3],
-  [-1, 3, -4],
-  [-1, 2, 3]
+  [1],
+  [-1]
 ];
 
-var solver = new dpll(4, input);
-
-console.log(solver.solve());
+console.log(dpll(1, input));
