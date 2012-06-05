@@ -1,7 +1,16 @@
 // This is an extremely simple implementation of the DPLL algorithm for
 // solving boolean satisfiability problems. It contains no optimizations.
 
-// Utility function for copying an array.
+// The input consists of a boolean expression in Conjunctive Normal Form.
+// This means it looks something like this:
+//
+// `(A OR B) AND (B OR ~C)`
+//
+// We encode this as an array of arrays of integers ranging from 1 to n:
+//
+// `[[1, 2], [2, -3]]`
+//
+// A negative number implies `NOT`.
 
 function copy (array) {
   return array.map(function (item) {
@@ -11,6 +20,7 @@ function copy (array) {
   });
 }
 
+// ### `satisfiable`
 // Takes a clause and a set of values and determines if the clause is
 // satisfiable given the values which are defined.  This will return one of
 // `true`, `false`, or `undefined`, if it cannot be determined whether the
@@ -35,11 +45,10 @@ function satisfiable (clause, values) {
   return undefined;
 }
 
-// The recursive `dpll` function.
+// ### `dpll`
 //
 // * `count` is the total number of variables.
-// * `clauses` is an array of clauses in Conjunctive Normal Form (ie, each clause
-//   has variables which are ORed together, then each clause is ANDed together).
+// * `clauses` is an array of clauses.
 // * `values` is a set of variable assignments. 
 // * `test` is a variable which we are attempting to set to `value`.
 
@@ -72,8 +81,9 @@ function dpll (count, clauses, values, test, value) {
     });
   });
 
-  // If there are no clauses left after the above filtering, return `true`.
-  if (clauses.length === 0) { console.dir(values); return true; }
+  // If there are no clauses left after the above filtering, return the set of
+  // values which make the expression `true`.
+  if (clauses.length === 0) return values;
 
   // If any of the clauses have no literals left, return `false`.
   if (clauses.some(function (c) { return c.length === 0; })) return false;
@@ -86,13 +96,14 @@ function dpll (count, clauses, values, test, value) {
   // Set the value we're going to test now.
   values[test] = value;
 
+  // Recurse.
   return dpll(count, clauses, values, choice, true) ||
          dpll(count, clauses, values, choice, false);
 }
 
 var input = [
-  [1],
-  [-1]
+  [2, 3, 1],
+  [-1, -2, 3]
 ];
 
-console.log(dpll(1, input));
+console.log(dpll(3, input));
