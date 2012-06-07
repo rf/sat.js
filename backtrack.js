@@ -63,7 +63,7 @@ function satisfiable (clause, values) {
   // If every variable is false, then the clause is false.
   if (clause.every(function (v) { return resolve(v) === false; })) return false;
   // If any variable is true, then the clause is true.
-  if (clause.some(function (v) { return resolve(v) === true;})) return true;
+  if (clause.some(function (v) { return resolve(v) === true; })) return true;
 
   // Otherwise, we don't know what the clause is.
   return undefined;
