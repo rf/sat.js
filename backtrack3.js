@@ -4,7 +4,7 @@
 // The input consists of a boolean expression in Conjunctive Normal Form.
 // This means it looks something like this:
 //
-// `(A OR B) AND (B OR ~C)`
+// `(blue OR green) AND (green OR NOT yellow)`
 //
 // We encode this as an array of strings with a `-` in front for negation:
 //
@@ -30,11 +30,14 @@ function solve (variables, clauses, model) {
 
   // Choose a new value to test by simply looping over the possible variables
   // and checking to see if the variable has been given a value yet.  
-  var choices = variables.filter(function (item) {
-    return model[item] === undefined;
-  });
-  var choice = choices[0];
+  var choice;
+  for (var i = 0; i < variables.length; i++) {
+    if (model[variables[i]] === undefined) {
+      choice = variables[i];
+    }
+  }
 
+  // If there are no more variables to try, return false.
   if (!choice) return false;
 
   // Recurse into two cases. The variable we chose will need to be either

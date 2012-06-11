@@ -12,7 +12,7 @@
 //
 // A negative number implies `NOT`.
 
-// ### `satisfiable`
+// ### satisfiable
 // Takes a clause and a set of values and determines if the clause is
 // satisfiable given the values which are defined.  This will return one of
 // `true`, `false`, or `undefined`, if it cannot be determined whether the
@@ -37,7 +37,7 @@ function satisfiable (clause, values) {
   return undefined;
 }
 
-// ### `dpll`
+// ### dpll
 //
 // * `count` is the total number of variables.
 // * `clauses` is an array of clauses.
@@ -51,7 +51,7 @@ function dpll (count, clauses, values, test, value) {
   clauses = clauses.filter(function (clause) {
     return !satisfiable(clause, values);
   });
-  
+
   // Take each clause, and ...
   clauses = clauses.map(function (clause) {
 
@@ -81,7 +81,7 @@ function dpll (count, clauses, values, test, value) {
   // For simplicity, we choose randomly.
   var choice = Math.floor(Math.random() * count) + 1;
 
-  // Set the value we're going to test now.
+  // Set the value we're going to try.
   values[test] = value;
 
   // Recurse.
